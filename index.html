@@ -1,43 +1,3 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
 <html lang="en">
 <head>
   <link rel="icon" href="./images/TCG_icon.png" type="image/x-icon">
@@ -46,9 +6,9 @@
   <title>TCG Game Platform - Home</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 font-sans min-h-screen w-full">
   <!-- Navigation -->
-  <nav class="bg-blue-600 text-white p-4 sticky top-0">
+  <nav class="bg-blue-600 text-white p-4 sticky top-0 w-full">
     <ul class="flex space-x-6 justify-center">
       <li><a href="index.html" class="hover:underline font-bold">Home</a></li>
       <li><a href="economy.html" class="hover:underline">Card Economy</a></li>
@@ -58,22 +18,38 @@
     </ul>
   </nav>
 
-
   <!-- Home Section -->
-  <section class="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-    <div class="text-center max-w-2xl p-6">
-    <img src="images/MInecraft_web.png" alt="The TCG Game World" class="mb-4" style="width: 100%; max-width: 600px;">
-      <p class="text-lg mb-6">A <b>Trading Card Game</b> (TCG) is a type of collectible card game where players build customized decks using cards they own and then compete against each other using those decks. Each card typically represents a character, spell, or item, with unique abilities or effects that influence gameplay. Players use strategy, deck-building skills, and knowledge of the game's rules to outplay their opponents. Popular examples include <b>one piece card game</b>, <b>Yu-Gi-Oh!</b>, and <b>Pokémon TCG. TCGs</b> often combine elements of competition, collection, and creativity, appealing to both casual and competitive players.</p>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="bg-white text-black p-4 rounded shadow">Gacha Simulator: Open packs and collect rare cards!</div>
-        <div class="bg-white text-black p-4 rounded shadow">Card Price Trends: Stay updated on market values.</div>
-        <div class="bg-white text-black p-4 rounded shadow">Cards: Know my favor cards</div>
-        <div class="bg-white text-black p-4 rounded shadow">Shops: Find TCG shops near you.</div>
-      </div>
-    </div>
-  </section>
+  <section class="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+  <div class="text-center p-6 w-full max-w-4xl mx-auto">
+    <img src="images/MInecraft_web.png" alt="The TCG Game World" class="mb-4 mx-auto w-full" style="max-width: 740px;">
+    <div class="flex items-center justify-center mb-6 w-full gap-6">
+    <img src="images/hero.jpg" alt="The TCG Game World" class="rounded shadow-lg flex-1 object-cover" style="max-width: 50%; height: auto;">
+    <p class="text-lg text-left mb-0 flex-1">
+    A <b>Trading Card Game</b> (TCG) is a type of collectible card game where players build customized decks using cards they own and then compete against each other using those decks. Each card typically represents a character, spell, or item, with unique abilities or effects that influence gameplay. Players use strategy, deck-building skills, and knowledge of the game's rules to outplay their opponents. Popular examples include <b>one piece card game</b>, <b>Yu-Gi-Oh!</b>, and <b>Pokémon TCG. TCGs</b> often combine elements of competition, collection, and creativity, appealing to both casual and competitive players.
+  </p>
+</div>
+<div class="grid grid-cols-2 gap-4 w-full">
+  <div class="bg-white text-black p-3 rounded shadow text-base flex flex-col items-center">
+    <img src="images/gacha.png" alt="Gacha Simulator" class="w-32 h-32 mb-2">
+    Gacha Simulator: Open packs and collect rare cards!
+  </div>
+  <div class="bg-white text-black p-3 rounded shadow text-base flex flex-col items-center">
+    <img src="images/trend.jpg" alt="Card Price Trends" class="w-32 h-32 mb-2">
+    Card Price Trends: Stay updated on market values.
+  </div>
+  <div class="bg-white text-black p-3 rounded shadow text-base flex flex-col items-center">
+    <img src="images/card.png" alt="Cards" class="w-32 h-32 mb-2">
+    Cards: Know my favor cards
+  </div>
+  <div class="bg-white text-black p-3 rounded shadow text-base flex flex-col items-center">
+    <img src="images/shop.png" alt="Shops" class="w-32 h-32 mb-2">
+    Shops: Find TCG shops near you.
+  </div>
+</div>
+  </div>
+</section>
 </body>
 <script>
   document.addEventListener("DOMContentLoaded", () => console.log("Welcome to TCG!"));
 </script>
-</html>
+</html> 
