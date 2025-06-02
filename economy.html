@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCG Game Platform - Card Economy</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <!-- Navigation -->
+  <nav class="bg-blue-600 text-white p-4 sticky top-0">
+    <ul class="flex space-x-6 justify-center">
+      <li><a href="index.html" class="hover:underline">Home</a></li>
+      <li><a href="economy.html" class="hover:underline font-bold">Card Economy</a></li>
+      <li><a href="cards.html" class="hover:underline">Cards</a></li>
+      <li><a href="shops.html" class="hover:underline">Shops</a></li>
+      <li><a href="gacha.html" class="hover:underline">Gacha Simulator</a></li>
+    </ul>
+  </nav>
+
+  <!-- Card Economy Section -->
+  <section class="min-h-screen p-8 bg-gray-200">
+    <h2 class="text-3xl font-bold text-center mb-8">Card Economy</h2>
+    <p class="text-center mb-6">Explore TCG product lines on TCGplayer.</p>
+    <div class="max-w-6xl mx-auto">
+      <div id="card-economy" class="grid grid-cols-1 gap-6">
+        <!-- Product buttons will be populated by JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Product lines data
+    const products = [
+      { 
+        name: "Pokémon TCG", 
+        url: "https://www.tcgplayer.com/search/pokemon-japan/product?productLineName=pokemon-japan&view=grid",
+        image: "./images/Pokemon.jpg"
+      },
+      { 
+        name: "Star Wars: Unlimited", 
+        url: "https://www.tcgplayer.com/search/star-wars-unlimited/product?productLineName=star-wars-unlimited&page=1&view=grid",
+        image: "./images/Star Wars Unlimited.png"
+      },
+      { 
+        name: "One Piece Card Game", 
+        url: "https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&page=1&view=grid",
+        image: "./images/One Piece Card Game.jpg"
+      },
+            { 
+        name: "YuGiOh!", 
+        url: "https://www.tcgplayer.com/search/yugioh/product?productLineName=yugioh&page=1&view=grid",
+        image: "./images/YuGiOh.jpg"
+      }
+    ];
+
+    // Function to display product buttons
+    function displayProductButtons() {
+      const cardEconomyContainer = document.getElementById("card-economy");
+      cardEconomyContainer.innerHTML = "";
+
+      products.forEach(product => {
+        const div = document.createElement("div");
+        div.className = "bg-white p-6 rounded-lg shadow-lg text-center";
+        div.innerHTML = `
+          <img src="${product.image}" alt="${product.name}" class="w-full h-192  object-contain mb-4 rounded-lg">
+          <h3 class="font-bold text-xl text-black mb-2">${product.name}</h3>
+          <button onclick="window.open('${product.url}', '_blank')" 
+                  class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+            Explore ${product.name} on TCGplayer
+          </button>
+        `;
+        cardEconomyContainer.appendChild(div);
+      });
+    }
+
+    // Initialize the product display
+    displayProductButtons();
+  </script>
+</body>
+</html>

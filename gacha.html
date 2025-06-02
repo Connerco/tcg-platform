@@ -1,0 +1,332 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCG Game Platform - Gacha Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .bg-rare-cyan {
+      background-color: #c3ffff;
+    }
+    .bg-epic-red {
+      background-color: #D52D12;
+    }
+    .bg-rare-cyan {
+      background-color: #c3ffff;
+    }
+    .bg-epic-red {
+      background-color: #D52D12;
+    }
+    .glow-effect {
+  animation: glow-loop 2.5s linear infinite;
+}
+
+@keyframes glow-loop {
+  0% {
+    box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.8), 0 0 25px 10px rgba(255, 223, 0, 0.5);
+  }
+  80% {
+    box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0.3);
+  }
+  90% {
+    box-shadow: none;
+  }
+  100% {
+    box-shadow: none;
+  }
+}
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <!-- Navigation -->
+  <nav class="bg-blue-600 text-white p-4 sticky top-0">
+    <ul class="flex space-x-6 justify-center">
+      <li><a href="index.html" class="hover:underline">Home</a></li>
+      <li><a href="economy.html" class="hover:underline">Card Economy</a></li>
+      <li><a href="cards.html" class="hover:underline">Cards</a></li>
+      <li><a href="shops.html" class="hover:underline">Shops</a></li>
+      <li><a href="gacha.html" class="hover:underline font-bold">Gacha Simulator</a></li>
+    </ul>
+  </nav>
+
+  <!-- Gacha Simulator Section -->
+  <section class="min-h-screen p-8 bg-gray-200">
+    <h2 class="text-3xl font-bold text-center mb-8">Gacha Simulator</h2>
+    <p class="text-center mb-6">Use 5 orbs to open a pack containing 5 cards!</p>
+    <div class="text-center max-w-6xl mx-auto">
+      <p id="orb-count" class="text-lg mb-4">Orbs: 5500</p>
+      <button id="open-pack" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Open Pack (50 Orbs)</button>
+      <div id="gacha-cards" class="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <!-- Gacha results will be populated by JavaScript -->
+      </div>
+      <!-- History Section -->
+      <div id="draw-history" class="mt-8">
+        <h3 class="text-2xl font-bold text-center mb-4">History</h3>
+        <div id="history-list" class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          <!-- History will be populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
+    }
+
+    // Sample data (replace with cloud database API calls)
+    const cards = [
+      { id: 1, name: "Chicken Jockey – Ultimate Edition!", rarity: "Ultimate", price: 120, image: "./images/Chicken Jockey – Ultimate Edition!.gif" },
+      { id: 2, name: "Chicken Jockey!", rarity: "Common", price: 10, image: "./images/Chicken Jockey!.gif" },
+      { id: 3, name: "I... am Steve – Ultimate Edition!", rarity: "Ultimate", price: 130, image: "./images/I... am Steve – Ultimate Edition!.gif" },
+      { id: 4, name: "I... am Steve.", rarity: "Common", price: 15, image: "  ./images/I... am Steve..png" },
+      { id: 5, name: "Coming in hot!", rarity: "Rare", price: 40, image: "./images/Coming in hot!.gif" },
+      { id: 6, name: "Release! – Ultimate Edition!", rarity: "Epic", price: 100, image: "./images/Release! – Ultimate Edition!.gif" },
+      { id: 7, name: "Release!", rarity: "Common", price: 8, image: "./images/Release!.jpg" },
+      { id: 8, name: "Flint and Steel – Ultimate Edition!", rarity: "Epic", price: 110, image: "./images/Flint and Steel – Ultimate Edition!.gif" },
+      { id: 9, name: "Flint and Steel!", rarity: "Common", price: 12, image: "./images/Flint and Steel!.jpg" },
+      { id: 10, name: "The Nether!", rarity: "Rare", price: 50, image: "./images/The Nether!.jpg" },
+      { id: 11, name: "The Villagers...", rarity: "Common", price: 5, image: "./images/The Villagers....jpg" },
+      { id: 12, name: "This is a crafting table.", rarity: "Common", price: 7, image: "./images/This is a crafting table..png" },
+      { id: 13, name: "Ender Pearl!", rarity: "Rare", price: 45, image: "./images/Ender Pearl!.jpg" },
+      { id: 14, name: "As a child, I yearned for the mines...", rarity: "Common", price: 10, image: "./images/As a child, I yearned for the mines....jpeg" },
+      { id: 15, name: "Pink house!", rarity: "Common", price: 8, image: "./images/Pink house!.jpg" },
+      { id: 16, name: "First we mine,", rarity: "Common", price: 6, image: "./images/First we mine.jpg" },
+      { id: 17, name: "then we craft.", rarity: "Common", price: 6, image: "./images/then we craft.jpg" },
+      { id: 18, name: "LET’S MINECRAFT!", rarity: "Epic", price: 55, image: "./images/let's-minecraft-steve.gif" },
+      { id: 19, name: "The orb", rarity: "Rare", price: 10, image: "./images/The orb.jpg" },
+      { id: 20, name: "This guy is such a tool bag.", rarity: "Common", price: 7, image: "./images/This guy is such a tool bag..png" },
+      { id: 21, name: "This place makes no sense.", rarity: "Common", price: 5, image: "./images/This place makes no sense..jpg" },
+      { id: 22, name: "SLIME CUBE!", rarity: "Common", price: 35, image: "./images/SLIME CUBE!.jpg" },
+      { id: 23, name: "The Overworld!", rarity: "Rare", price: 50, image: "./images/The Overworld!.jpg" },
+      { id: 24, name: "Herobrine", rarity: "Rare", price: 60, image: "./images/Herobrine.jpg" },
+      { id: 25, name: "Dennis", rarity: "Common", price: 10, image: "./images/Dennis.jpg" },
+      { id: 26, name: "Scream", rarity: "Common", price: 8, image: "./images/Scream.jpg" },
+      { id: 27, name: "Lava Chicken", rarity: "Rare", price: 40, image: "./images/Lava Chicken.jpg" },
+      { id: 28, name: "Technoblade", rarity: "Epic", price: 60, image: "./images/Technoblade.gif" },
+      { id: 29, name: "Diamond Steve", rarity: "Rare", price: 150, image: "./images/Diamond Steve.jpg" },
+      { id: 30, name: "Elytra", rarity: "Common", price: 45, image: "./images/Elytra.jpeg" },
+    ];
+
+    // Define rarity probabilities (must sum to 1)
+    const rarityChances = [
+      { rarity: "Ultimate", chance: 0.01 }, // 1%
+      { rarity: "Epic", chance: 0.05 },    // 5%
+      { rarity: "Rare", chance: 0.20 },    // 20%
+      { rarity: "Common", chance: 0.74 },  // 74%
+    ];
+
+    // Helper: pick a rarity based on probability
+    function getRandomRarity() {
+      const rand = Math.random();
+      let sum = 0;
+      for (const entry of rarityChances) {
+        sum += entry.chance;
+        if (rand < sum) return entry.rarity;
+      }
+      return "Common"; // Fallback
+    }
+
+    // Helper: get a random card of a given rarity
+    function getRandomCardByRarity(rarity) {
+      const filtered = cards.filter(card => card.rarity === rarity);
+      if (filtered.length === 0) return null;
+      return filtered[Math.floor(Math.random() * filtered.length)];
+    }
+
+    // Helper: get background and text color based on rarity
+    function getRarityColor(rarity) {
+      switch (rarity) {
+        case "Ultimate": return { bg: "bg-yellow-400", text: "text-white" }; // Gold with white text
+        case "Epic": return { bg: "bg-epic-red", text: "text-white" }; // Red (#D52D12) with white text
+        case "Rare": return { bg: "bg-rare-cyan", text: "text-black" }; // Cyan (#c3ffff) with black text
+        case "Common": return { bg: "bg-white", text: "text-black" }; // White with black text
+        default: return { bg: "bg-white", text: "text-black" }; // Fallback
+      }
+    }
+
+    let orbs = 5500;
+    let drawHistory = {}; // Object to track drawn cards and their counts
+
+    // Gacha Simulator Logic
+    const openPackButton = document.getElementById("open-pack");
+    const orbCountDisplay = document.getElementById("orb-count");
+    const gachaCardsContainer = document.getElementById("gacha-cards");
+    const historyListContainer = document.getElementById("history-list");
+
+    // Function to update history display
+    function updateHistoryDisplay() {
+      historyListContainer.innerHTML = "";
+      Object.entries(drawHistory).forEach(([cardName, count]) => {
+        const card = cards.find(c => c.name === cardName);
+        const colors = getRarityColor(card.rarity);
+        const div = document.createElement("div");
+        div.className = `${colors.bg} p-4 rounded shadow text-center`;
+        div.innerHTML = `
+          <img src="${card.image}" alt="${card.name}" class="w-full h-24 object-cover mb-2 rounded">
+          <h3 class="font-bold ${colors.text}">${card.name}</h3>
+          <p class="${colors.text}">Rarity: ${card.rarity}</p>
+          <p class="${colors.text}">Amount: ${count} time${count > 1 ? "s" : ""}</p>
+        `;
+        historyListContainer.appendChild(div);
+      });
+    }
+
+    // Function to display cards one by one with delay
+    async function displayPack(pack) {
+      gachaCardsContainer.innerHTML = "";
+      for (let i = 0; i < pack.length; i++) {
+        const card = pack[i];
+        // Update draw history
+        drawHistory[card.name] = (drawHistory[card.name] || 0) + 1;
+        const colors = getRarityColor(card.rarity);
+        const div = document.createElement("div");
+        div.className = `${colors.bg} p-4 rounded shadow text-center opacity-0 transition-opacity duration-500`;
+        div.innerHTML = `
+          <img src="${card.image}" alt="${card.name}" class="w-full h-48 object-cover mb-2 rounded">
+          <h3 class="font-bold ${colors.text}">${card.name}</h3>
+          <p class="${colors.text}">Rarity: ${card.rarity}</p>
+        `;
+        gachaCardsContainer.appendChild(div);
+        // Fade in effect
+        setTimeout(() => {
+          div.classList.add("opacity-100");
+        }, 10);
+        // Wait 500ms before showing next card
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      // Update history after all cards are displayed
+      updateHistoryDisplay();
+    }
+        // Display cards one by one with delay and glow effect
+async function displayPack(pack) {
+  gachaCardsContainer.innerHTML = "";
+
+  for (let i = 0; i < pack.length; i++) {
+    const card = pack[i];
+    
+    const isFirstTime = !drawHistory[card.name]; // Check before updating history
+
+    // Update draw history
+    drawHistory[card.name] = (drawHistory[card.name] || 0) + 1;
+
+    const colors = getRarityColor(card.rarity);
+    const div = document.createElement("div");
+    
+    // Conditionally apply glow-effect
+    const glowClass = isFirstTime ? "glow-effect" : "";
+    div.className = `${colors.bg} ${glowClass} p-4 rounded shadow text-center opacity-0 transition-opacity duration-500`;
+
+    div.innerHTML = `
+      <img src="${card.image}" alt="${card.name}" class="w-full h-48 object-cover mb-2 rounded">
+      <h3 class="font-bold ${colors.text}">${card.name}</h3>
+      <p class="${colors.text}">Rarity: ${card.rarity}</p>
+    `;
+
+    gachaCardsContainer.appendChild(div);
+    
+    setTimeout(() => {
+      div.classList.add("opacity-100");
+    }, 10);
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  updateHistoryDisplay();
+  updateUI();
+}
+
+    // Function to update UI after pack opening
+
+    openPackButton.addEventListener("click", async () => {
+      if (orbs < 50) {
+        alert("Not enough orbs! You need 5 orbs to open a pack.");
+        return;
+      }
+
+      orbs -= 50;
+      orbCountDisplay.textContent = `Orbs: ${orbs}`;
+
+      // Simulate opening a pack with 5 random cards by rarity
+      const pack = [];
+      for (let i = 0; i < 6; i++) {
+        let rarity = getRandomRarity();
+        let card = getRandomCardByRarity(rarity);
+        if (!card) card = cards[Math.floor(Math.random() * cards.length)];
+        pack.push(card);
+      }
+
+      // Display cards sequentially
+      await displayPack(pack);
+    
+    });
+  </script>
+</body>
+</html>

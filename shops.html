@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCG Game Platform - Shops</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <!-- Navigation -->
+  <nav class="bg-blue-600 text-white p-4 sticky top-0">
+    <ul class="flex space-x-6 justify-center">
+      <li><a href="index.html" class="hover:underline">Home</a></li>
+      <li><a href="economy.html" class="hover:underline">Card Economy</a></li>
+      <li><a href="cards.html" class="hover:underline font-bold">Cards</a></li>
+      <li><a href="shops.html" class="hover:underline">Shops</a></li>
+      <li><a href="gacha.html" class="hover:underline">Gacha Simulator</a></li>
+    </ul>
+  </nav>
+
+  <!-- 商店區塊 -->
+  <section class="min-h-screen p-8 bg-gray-200">
+    <h2 class="text-3xl font-bold text-center mb-8">Find the card shop near by you</h2>
+    <p class="text-center mb-6">Using your current location to find the card shop near by you</p>
+    <div class="max-w-6xl mx-auto">
+      <div id="map"></div>
+      <div id="shop-list" class="grid grid-cols-1 gap-6"></div>
+    </div>
+  </section>
+
+  <script>
+    // 初始化地圖
+    let map, userMarker;
+    const defaultLocation = [25.0330, 121.5654]; // 台北市
+    map = L.map('map').setView(defaultLocation, 12);
+
+    // 添加 OpenStreetMap 圖層
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // 計算兩點間距離（公里）
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // 地球半徑（公里）
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    // 顯示商店
+    function displayShops(shops, userLocation) {
+      const shopListContainer = document.getElementById("shop-list");
+      shopListContainer.innerHTML = "";
+
+      if (shops.length === 0) {
+        shopListContainer.innerHTML = '<p class="text-center text-black">Card shop not found</p>';
+        return;
+      }
+
+      shops.forEach(shop => {
+        const lat = shop.lat;
+        const lon = shop.lon;
+        const name = shop.tags.name || "untitled card shop";
+        const address = shop.tags["addr:full"] || shop.tags["addr:street"] || "location not found";
+        const distance = calculateDistance(userLocation[0], userLocation[1], lat, lon);
+
+        // 只顯示 5 公里內的商店
+        if (distance > 5) return;
+
+        // 創建商店卡片
+        const div = document.createElement("div");
+        div.className = "bg-white p-6 rounded-lg shadow-lg";
+        div.innerHTML = `
+          <h3 class="font-extrabold text-2xl text-black mb-4 tracking-wide">${name}</h3>
+          <p class="text-black text-lg leading-relaxed mb-2">${address}</p>
+          <p class="text-black text-lg leading-relaxed mb-4">distence：${distance.toFixed(1)} km</p>
+        `;
+        shopListContainer.appendChild(div);
+
+        // 添加地圖標記
+        const marker = L.marker([lat, lon]).addTo(map);
+        marker.bindPopup(`
+          <b>${name}</b><br>
+          ${address}
+        `).openPopup();
+      });
+    }
+
+    // 使用 Overpass API 搜索卡片商店
+    function searchCardShops(location) {
+      const query = `
+        [out:json];
+        (
+          node["shop"="trading_cards"](around:5000,${location[0]},${location[1]});
+          node["shop"="toys"](around:5000,${location[0]},${location[1]});
+          node["shop"="cards"](around:5000,${location[0]},${location[1]});
+          node["shop"="books"](around:5000,${location[0]},${location[1]});
+        );
+        out body;
+      `;
+      const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const shops = data.elements || [];
+          displayShops(shops, location);
+        })
+        .catch(error => {
+          console.error("Overpass API error:", error);
+          document.getElementById("shop-list").innerHTML =
+            '<p class="text-center text-black">Can not load the card shop info, please try again</p>';
+        });
+    }
+
+    // 初始化定位
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLocation = [position.coords.latitude, position.coords.longitude];
+          map.setView(userLocation, 14);
+          userMarker = L.marker(userLocation, {
+            icon: L.icon({
+              iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-blue.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41]
+            })
+          }).addTo(map).bindPopup("Your loaction").openPopup();
+          searchCardShops(userLocation);
+        },
+        () => {
+          // 定位失敗，使用預設位置
+          map.setView(defaultLocation, 12);
+          L.popup()
+            .setLatLng(defaultLocation)
+            .setContent("location failed, showing card shops near Taipei City.")
+            .openOn(map);
+          searchCardShops(defaultLocation);
+        }
+      );
+    } else {
+      // 瀏覽器不支援定位
+      map.setView(defaultLocation, 12);
+      L.popup()
+        .setLatLng(defaultLocation)
+        .setContent("Your browser does not support geolocation, showing card shops near Taipei City.")
+        .openOn(map);
+      searchCardShops(defaultLocation);
+    }
+  </script>
+</body>
+</html>
