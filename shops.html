@@ -1,3 +1,4 @@
+<!-- ✅ 修正：將 nav 中的 "Shops" 設為粗體，並新增商店下拉選單功能 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,8 +24,8 @@
     <ul class="flex space-x-6 justify-center">
       <li><a href="index.html" class="hover:underline">Home</a></li>
       <li><a href="economy.html" class="hover:underline">Card Economy</a></li>
-      <li><a href="cards.html" class="hover:underline font-bold">Cards</a></li>
-      <li><a href="shops.html" class="hover:underline">Shops</a></li>
+      <li><a href="cards.html" class="hover:underline">Cards</a></li>
+      <li><a href="shops.html" class="hover:underline font-bold">Shops</a></li>
       <li><a href="gacha.html" class="hover:underline">Gacha Simulator</a></li>
     </ul>
   </nav>
@@ -40,19 +41,16 @@
   </section>
 
   <script>
-    // 初始化地圖
     let map, userMarker;
-    const defaultLocation = [25.0330, 121.5654]; // 台北市
+    const defaultLocation = [25.0330, 121.5654];
     map = L.map('map').setView(defaultLocation, 12);
 
-    // 添加 OpenStreetMap 圖層
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // 計算兩點間距離（公里）
     function calculateDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371; // 地球半徑（公里）
+      const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -62,7 +60,6 @@
       return R * c;
     }
 
-    // 顯示商店
     function displayShops(shops, userLocation) {
       const shopListContainer = document.getElementById("shop-list");
       shopListContainer.innerHTML = "";
@@ -79,29 +76,33 @@
         const address = shop.tags["addr:full"] || shop.tags["addr:street"] || "location not found";
         const distance = calculateDistance(userLocation[0], userLocation[1], lat, lon);
 
-        // 只顯示 5 公里內的商店
         if (distance > 5) return;
 
-        // 創建商店卡片
         const div = document.createElement("div");
         div.className = "bg-white p-6 rounded-lg shadow-lg";
+
         div.innerHTML = `
           <h3 class="font-extrabold text-2xl text-black mb-4 tracking-wide">${name}</h3>
           <p class="text-black text-lg leading-relaxed mb-2">${address}</p>
-          <p class="text-black text-lg leading-relaxed mb-4">distence：${distance.toFixed(1)} km</p>
+          <p class="text-black text-lg leading-relaxed mb-4">distance：${distance.toFixed(1)} km</p>
+          <label class="block text-black font-semibold mb-1">Available TCGs:</label>
+          <select class="w-full p-2 rounded border mb-2" onchange="this.nextElementSibling.style.display = this.value === 'add' ? 'block' : 'none'">
+            <option>Pokemon TCG</option>
+            <option>One Piece Card Game</option>
+            <option>YuGiOh</option>
+            <option>Weiss Schwarz</option>
+            <option value="add">+ Add New</option>
+          </select>
+          <input type="text" placeholder="Enter new TCG name" style="display:none" class="w-full p-2 rounded border" onblur="if(this.value){ const option = document.createElement('option'); option.text = this.value; this.previousElementSibling.add(option, this.previousElementSibling.options.length - 1); this.previousElementSibling.selectedIndex = this.previousElementSibling.options.length - 2; this.value=''; this.style.display='none'; }">
         `;
+
         shopListContainer.appendChild(div);
 
-        // 添加地圖標記
         const marker = L.marker([lat, lon]).addTo(map);
-        marker.bindPopup(`
-          <b>${name}</b><br>
-          ${address}
-        `).openPopup();
+        marker.bindPopup(`<b>${name}</b><br>${address}`).openPopup();
       });
     }
 
-    // 使用 Overpass API 搜索卡片商店
     function searchCardShops(location) {
       const query = `
         [out:json];
@@ -128,7 +129,6 @@
         });
     }
 
-    // 初始化定位
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -140,26 +140,18 @@
               iconSize: [25, 41],
               iconAnchor: [12, 41]
             })
-          }).addTo(map).bindPopup("Your loaction").openPopup();
+          }).addTo(map).bindPopup("Your location").openPopup();
           searchCardShops(userLocation);
         },
         () => {
-          // 定位失敗，使用預設位置
           map.setView(defaultLocation, 12);
-          L.popup()
-            .setLatLng(defaultLocation)
-            .setContent("location failed, showing card shops near Taipei City.")
-            .openOn(map);
+          L.popup().setLatLng(defaultLocation).setContent("location failed, showing card shops near Taipei City.").openOn(map);
           searchCardShops(defaultLocation);
         }
       );
     } else {
-      // 瀏覽器不支援定位
       map.setView(defaultLocation, 12);
-      L.popup()
-        .setLatLng(defaultLocation)
-        .setContent("Your browser does not support geolocation, showing card shops near Taipei City.")
-        .openOn(map);
+      L.popup().setLatLng(defaultLocation).setContent("Your browser does not support geolocation, showing card shops near Taipei City.").openOn(map);
       searchCardShops(defaultLocation);
     }
   </script>
